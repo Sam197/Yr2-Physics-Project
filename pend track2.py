@@ -11,6 +11,7 @@ import threading
 import pickle
 import cv2
 import numpy as np
+from time import time
 
 
 def start_data_aqu():
@@ -59,6 +60,7 @@ def cv2Main():
     global satS            #Especcialy considering the fact I'm using multithreading
     global valS
     global rangeS
+    global contorCutOff
     global data_aqu
     global data
 
@@ -68,6 +70,7 @@ def cv2Main():
     cap = cv2.VideoCapture(0)  #Get webcam, 0 is defult cam
 
     while True:
+        start = time()
         ret, frame = cap.read()
 
         hsvImage = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV) #Convert to hsv colour space
@@ -85,7 +88,7 @@ def cv2Main():
         #Only highlight a contour if it is big enough, removes highlighting small areas not wanted
         if len(contours) != 0:
             for countour in contours:
-                if cv2.contourArea(countour) > 500:
+                if cv2.contourArea(countour) > contorCutOff.get():
                     x, y, w, h = cv2.boundingRect(countour)
                     cv2.rectangle(frame, (x,y), (x+w, y+h), (0,0,255), 3)
                     if data_aqu:    #Get the data
@@ -97,6 +100,8 @@ def cv2Main():
 
         if cv2.waitKey(1) & 0xFF == ord('q'):  #Q key quits out of the loop
             break
+
+        #print(time()-start)
 
     cap.release()
 
@@ -111,6 +116,7 @@ def main():
     global satS
     global valS
     global rangeS
+    global contorCutOff
 
     def butfunc():
         '''Target for the button'''
@@ -129,14 +135,19 @@ def main():
     hueS.pack()
     satS = tk.Scale(root, label = 'Saturation Value', from_ = 0, to_ = 255, orient = tk.HORIZONTAL, length = 200, tickinterval = 50)
     satS.pack()
-    valS = tk.Scale(root, label = 'Saturaton Value', from_ = 0, to_ = 255, orient=tk.HORIZONTAL, length = 200, tickinterval = 50)
+    valS = tk.Scale(root, label = 'Value Value', from_ = 0, to_ = 255, orient=tk.HORIZONTAL, length = 200, tickinterval = 50)
     valS.pack()
     rangeS = tk.Scale(root, label = 'Detection Range', from_ = 0 , to = 255, orient = tk.HORIZONTAL, length = 200, tickinterval = 50)
     rangeS.pack()
+    contorCutOff = tk.Scale(root, label = 'Min contour size', from_ = 50, to_ = 1000, orient = tk.HORIZONTAL, length = 200, tickinterval = 100)
+    contorCutOff.pack()
     start = tk.Button(root, command = butfunc, text="Start")
     start.pack()
 
     tk.mainloop() #Mainloop hogs the thread.
+
+    # with open("Prev values.txt", 'w', encoding='utf8') as out:
+    #     out.write(f"Hue {hueS.get()}, Sat {satS.get()}, Val {valS.get()}, Range {rangeS.get()}, Contour Cutoff {contorCutOff.get()}")
 
 if __name__ == '__main__':
     #Starting the open-cv logic in a seperate thread since tk.mainloop() blocks the thread, mainloop() is kept in the main
@@ -149,3 +160,4 @@ if __name__ == '__main__':
     cam.start()
     main()
     
+
