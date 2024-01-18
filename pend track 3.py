@@ -128,5 +128,6 @@ class Manager:
 
         cv2.destroyAllWindows()
 
-manager = Manager()
-manager.run()
+if __name__ == '__main__':
+    manager = Manager()
+    manager.run()
