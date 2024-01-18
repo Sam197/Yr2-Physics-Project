@@ -88,12 +88,11 @@ def cv2Main():
         #Only highlight a contour if it is big enough, removes highlighting small areas not wanted
         if len(contours) != 0:
             for countour in contours:
-                if cv2.contourArea(countour) > contorCutOff.get():
+                if cv2.contourArea(countour) > contorCutOff.get() and data_aqu:
                     x, y, w, h = cv2.boundingRect(countour)
                     cv2.rectangle(frame, (x,y), (x+w, y+h), (0,0,255), 3)
-                    print(x,y)
-                    if data_aqu:    #Get the data
-                        data.append((x+w/2, y+h/2))
+                    #print(x,y)
+                    data.append((x+w/2, y+h/2))
 
         cv2.imshow('mask', mask)
         cv2.imshow('frame', frame)
