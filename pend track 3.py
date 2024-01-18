@@ -1,3 +1,7 @@
+'''
+A rewrite of pend track2, this time with NO GLOBAL VARIABLES!! WOOOOOO. The logic behind the detection of the pendulum is the same however
+'''
+
 import tkinter as tk
 from tkinter import messagebox, filedialog
 import threading
@@ -6,6 +10,7 @@ import cv2
 import numpy as np
 
 class Tkwindows:
+    '''Object that stores the tkinter window'''
 
     def __init__(self, managerObj):
 
@@ -13,6 +18,7 @@ class Tkwindows:
 
         self._root = tk.Tk()
         self._root.title("HSV Picker")
+        self._root.protocol('WM_DELETE_WINDOW', self.__closeWindow)   #When window is closed, tells the main loop in manager to stop
 
         self._hueS = tk.Scale(self._root, label = 'Hue Value', from_ = 0, to_ = 180, orient=tk.HORIZONTAL, length = 200, tickinterval = 45)
         self._hueS.pack()
@@ -27,6 +33,11 @@ class Tkwindows:
         self._start = tk.Button(self._root, command = self._manager.toggleDataAqu, text="Start")
         self._start.pack()
 
+    def __closeWindow(self):
+        '''Make sure the program stops when window closes'''
+        self._manager.stopMainloop()
+        self._root.destroy()
+
     @property
     def buttonState(self):
         return self._start['text']
@@ -39,7 +50,7 @@ class Tkwindows:
         return self._hueS.get(), self._satS.get(), self._valS.get(), self._rangeS.get(), self._contorCutOff.get()
 
     def tkUpdate(self):
-        pass
+        self._root.update()
 
 class Manager:
 
@@ -49,6 +60,9 @@ class Manager:
         self._cam = cv2.VideoCapture(0)
         self._data = []      
         self._running = True  
+
+    def stopMainloop(self):
+        self._running = False
 
     def _saveData(self):
         root = tk.Tk()
@@ -99,14 +113,20 @@ class Manager:
         cv2.imshow('frame', frame)
         #cv2.imshow('hsv', hsvImage)
 
-        if cv2.waitKey(1) & 0xFF == ord('q'):  #Q key quits out of the loop
+        if cv2.waitKey(1) & 0xFF == ord('q'):  #Q stops the mainloop
             self._running = False
 
     def run(self):
 
+        self._tkwindow.tkUpdate()
+
         while self._running:
+            #self._tick()
             self._tkwindow.tkUpdate()
-            self._tick()
+
+        self._cam.release()
+
+        cv2.destroyAllWindows()
 
 manager = Manager()
 manager.run()
