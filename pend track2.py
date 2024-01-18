@@ -32,8 +32,9 @@ def stop_data_aqu():
     global data
     data_aqu = False
     print(data)
-    if messagebox.askquestion("Save data?", "Would you like to save the data?"):
+    if messagebox.askquestion("Save data?", "Would you like to save the data?") == 'yes':
         save_data(data)
+    data.clear()
 
 def save_data(the_data):
     '''
