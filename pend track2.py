@@ -35,7 +35,6 @@ def stop_data_aqu():
     if messagebox.askquestion("Save data?", "Would you like to save the data?"):
         save_data(data)
 
-
 def save_data(the_data):
     '''
     Saves the data
@@ -57,7 +56,7 @@ def cv2Main():
     '''
 
     global hueS            #I don't like globals, but this was the easiest way of doing this
-    global satS            #Especcialy considering the fact I'm using multithreading
+    global satS            #Not necessarily the correct way tho.....
     global valS
     global rangeS
     global contorCutOff
@@ -67,7 +66,7 @@ def cv2Main():
     data_aqu = False
     data = []
 
-    cap = cv2.VideoCapture(0)  #Get webcam, 0 is defult cam
+    cap = cv2.VideoCapture(0)  #Get webcam, 0 is default cam
 
     while True:
         start = time()
@@ -91,6 +90,7 @@ def cv2Main():
                 if cv2.contourArea(countour) > contorCutOff.get():
                     x, y, w, h = cv2.boundingRect(countour)
                     cv2.rectangle(frame, (x,y), (x+w, y+h), (0,0,255), 3)
+                    print(x,y)
                     if data_aqu:    #Get the data
                         data.append((x+w/2, y+h/2))
 
@@ -109,7 +109,12 @@ def cv2Main():
 
 def main():
     '''
-    The main func for the tk window
+    The main func for the tk window. Hue, Saturation and Value all correspond to HSV values in the input image to be
+    isolated in the mask of the image. The range is to spescify the range for the HSV values to be isolated, so a range
+    of 0 will give a mask with no isolation and no colour will exactly match the HSV colour specified - and a range of 255
+    will give a mask of all white, as all colours will fall within the range. The contourCutOff is selecting how small, or
+    big, we want a collection of isolated pixels to be before we draw a box around them. This 'cleans' up the image, not
+    letting small 1 pixel detections being mistakenly identified as the pendulum.
     '''
 
     global hueS  #Not the globals again :-(
@@ -146,15 +151,15 @@ def main():
 
     tk.mainloop() #Mainloop hogs the thread.
 
+    #This kept throwing an error, then it hit me, you can't call a widget that's been yeeted out of existance
     # with open("Prev values.txt", 'w', encoding='utf8') as out:
     #     out.write(f"Hue {hueS.get()}, Sat {satS.get()}, Val {valS.get()}, Range {rangeS.get()}, Contour Cutoff {contorCutOff.get()}")
 
 if __name__ == '__main__':
     #Starting the open-cv logic in a seperate thread since tk.mainloop() blocks the thread, mainloop() is kept in the main
-    #thread as I read somewhere that tkinter doesn't like not being in the main thread. This two thread reason is why there
-    #are sooooo many global variables. It is possible to use tk.update() which isn't thread blocking, but this could
-    #lead to instablities if it is not called often enough. While in theory this shouldn't be a problem, not gonna take
-    #that chance 
+    #thread as I read somewhere that tkinter doesn't like not being in the main thread. It is possible to use tk.update() which isn't thread 
+    #blocking, but this could lead to instablities if it is not called often enough. While in theory this shouldn't be a problem, not gonna take
+    #that chance. The number of globals could have been reduced if classes were used.
 
     cam = threading.Thread(target = cv2Main, daemon=True)
     cam.start()
