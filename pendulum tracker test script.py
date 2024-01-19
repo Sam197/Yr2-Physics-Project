@@ -14,8 +14,8 @@ def track_pendulum():
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
         # Define the range for the orange color
-        lower_orange = np.array([200, 200, 200])
-        upper_orange = np.array([255, 255, 255])
+        lower = np.array([95, 174, 103]) 
+        upper = np.array([115, 194, 183])
 
         # lower_orange = np.array([130, 160, 220])
         # upper_orange = np.array([140, 170, 230])
@@ -25,7 +25,7 @@ def track_pendulum():
 
 
         # Create a mask using the specified color range
-        mask = cv2.inRange(hsv, lower_orange, upper_orange)
+        mask = cv2.inRange(hsv, lower, upper)
 
         # Find contours in the mask
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -46,6 +46,7 @@ def track_pendulum():
 
         # Break the loop if 'q' key is pressed
         if cv2.waitKey(1) & 0xFF == ord('q'):
+            cv2.imwrite(r'C:\Users\sojon\OneDrive\uni python\Yr2 Physics Project\test.png', frame)
             break
 
     # Release the video capture object

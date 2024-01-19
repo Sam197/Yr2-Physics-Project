@@ -1,10 +1,9 @@
 '''
 A rewrite of pend track2, this time with NO GLOBAL VARIABLES!! WOOOOOO. The logic behind the detection of the pendulum is the same however
 '''
-
+# pylint: disable=no-member
 import tkinter as tk
 from tkinter import messagebox, filedialog
-import threading
 import pickle
 import cv2
 import numpy as np
@@ -24,7 +23,7 @@ class Tkwindows:
         self._hueS.pack()
         self._satS = tk.Scale(self._root, label = 'Saturation Value', from_ = 0, to_ = 255, orient = tk.HORIZONTAL, length = 200, tickinterval = 50)
         self._satS.pack()
-        self._valS = tk.Scale(self._root, label = 'Saturaton Value', from_ = 0, to_ = 255, orient=tk.HORIZONTAL, length = 200, tickinterval = 50)
+        self._valS = tk.Scale(self._root, label = 'Value Value', from_ = 0, to_ = 255, orient=tk.HORIZONTAL, length = 200, tickinterval = 50)
         self._valS.pack()
         self._rangeS = tk.Scale(self._root, label = 'Detection Range', from_ = 0 , to = 255, orient = tk.HORIZONTAL, length = 200, tickinterval = 50)
         self._rangeS.pack()
@@ -50,16 +49,17 @@ class Tkwindows:
         return self._hueS.get(), self._satS.get(), self._valS.get(), self._rangeS.get(), self._contorCutOff.get()
 
     def tkUpdate(self):
+        self._root.title(f"Data points {2*len(self._manager._data)}")
         self._root.update()
 
 class Manager:
 
     def __init__(self):
+        self._cam = cv2.VideoCapture(0)
         self._tkwindow = Tkwindows(self)
         self._dataAqu = False
-        self._cam = cv2.VideoCapture(0)
-        self._data = []      
-        self._running = True  
+        self._data = []
+        self._running = True
 
     def stopMainloop(self):
         self._running = False
@@ -102,11 +102,11 @@ class Manager:
         #Only highlight a contour if it is big enough, removes highlighting small areas not wanted
         if len(contours) != 0:
             for countour in contours:
-                if cv2.contourArea(countour) > contourCutOff and self._dataAqu:
+                if cv2.contourArea(countour) > contourCutOff:
                     x, y, w, h = cv2.boundingRect(countour)
                     cv2.rectangle(frame, (x,y), (x+w, y+h), (0,0,255), 3)
-                    #print(x,y)
-                    self._data.append((x+w/2, y+h/2))
+                    if self._dataAqu:
+                        self._data.append((x+w/2, y+h/2))
 
         cv2.imshow('mask', mask)
         cv2.imshow('frame', frame)
@@ -120,7 +120,7 @@ class Manager:
         self._tkwindow.tkUpdate()
 
         while self._running:
-            #self._tick()
+            self._tick()
             self._tkwindow.tkUpdate()
 
         self._cam.release()

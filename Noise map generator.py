@@ -38,15 +38,12 @@ def randofiy(screen):
     '''
     for y in range(SCREENY):
         for x in range(SCREENX):
-            if round(random.random()) == 0:
-                pygame.draw.rect(screen, BLACK, ((x,y), (1,1)))
-            else:
-                pygame.draw.rect(screen, WHITE, ((x,y), (1,1)))
+            pygame.draw.rect(screen, (round(255*random.random()),round(255*random.random()), round(255*random.random())), ((x,y), (1,1)))
 
 def main():
 
     screen = pygame.display.set_mode((SCREENX, SCREENY))
-    randy(screen)
+    randofiy(screen)
     running = True
     saveNum = 1  #Used to not overwrite image saves
 
@@ -59,10 +56,10 @@ def main():
                 running = False
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RETURN:  #Produce a new noise map when enter key pressed
-                    pygame.image.save(screen, f'Random{saveNum}.png')  #Takes the screen and saves to a .png
+                    pygame.image.save(screen, f'RandomWColour{saveNum}.png')  #Takes the screen and saves to a .png
                     saveNum += 1
                     print("Randifiying")
-                    randy(screen)
+                    randofiy(screen)
                     print("Randified")
 
 if __name__ == "__main__":
