@@ -39,20 +39,25 @@ class Tkwindows:
 
     @property
     def buttonState(self):
+        '''Return the current state of the start/stop button'''
         return self._start['text']
     
     def setButton(self, txt):
+        '''Set the text on the button'''
         self._start.config(text=txt)
 
     @property
     def hsvrc_values(self):
+        '''Return the Hue, Saturation, Value, Range and Contour Cuttoff values'''
         return self._hueS.get(), self._satS.get(), self._valS.get(), self._rangeS.get(), self._contorCutOff.get()
 
     def tkUpdate(self):
+        '''Tick the tkwindow'''
         self._root.title(f"Data points {2*len(self._manager._data)}")
         self._root.update()
 
 class Manager:
+    '''Object that controlls the program's behavoir'''
 
     def __init__(self):
         self._cam = cv2.VideoCapture(0)
@@ -62,9 +67,11 @@ class Manager:
         self._running = True
 
     def stopMainloop(self):
+        '''Stop the program'''
         self._running = False
 
     def _saveData(self):
+        '''Save collected data as a pickled file'''
         root = tk.Tk()
         root.withdraw()
         root.filename = filedialog.asksaveasfile(mode = "w", defaultextension = ".pickle")
@@ -77,6 +84,7 @@ class Manager:
         root.destroy()
 
     def toggleDataAqu(self):
+        '''Toggle the data aqu'''
         if self._tkwindow.buttonState == 'Start':
             self._tkwindow.setButton('Stop')
             self._dataAqu = True
@@ -88,6 +96,7 @@ class Manager:
             self._data.clear()
     
     def _tick(self):
+        '''Updates the cv2 logic, reading and finding specified colour in webcame frame'''
         ret, frame = self._cam.read()
 
         hsvImage = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV) #Convert to hsv colour space
@@ -116,6 +125,7 @@ class Manager:
             self._running = False
 
     def run(self):
+        '''Run the program'''
 
         self._tkwindow.tkUpdate()
 
@@ -123,8 +133,8 @@ class Manager:
             self._tick()
             self._tkwindow.tkUpdate()
 
-        self._cam.release()
-
+        #Clean up
+        self._cam.release()    
         cv2.destroyAllWindows()
 
 if __name__ == '__main__':
