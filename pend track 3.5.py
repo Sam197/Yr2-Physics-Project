@@ -1,9 +1,10 @@
 '''
-A rewrite of pend track2, this time with NO GLOBAL VARIABLES!! WOOOOOO. The logic behind the detection of the pendulum is the same however
+Modification of pend track 3. This script allows the script to be used as a module aswell as a standalone program
 '''
 # pylint: disable=no-member
 import tkinter as tk
 from tkinter import messagebox, filedialog
+import random
 import pickle
 import cv2
 import numpy as np
@@ -59,12 +60,16 @@ class Tkwindows:
 class Manager:
     '''Object that controlls the program's behavoir'''
 
-    def __init__(self):
+    def __init__(self, ui = False):
+        self._UI = ui
         self._cam = cv2.VideoCapture(0)
-        self._tkwindow = Tkwindows(self)
+        if self._UI:
+            self._tkwindow = Tkwindows(self)
         self._dataAqu = False
         self._data = []
         self._running = True
+        self._frame = None
+        self._mask
 
     def stopMainloop(self):
         '''Stop the program'''
@@ -93,32 +98,33 @@ class Manager:
             self._dataAqu = False
             if messagebox.askquestion("Save data?", "Would you like to save the data?") == 'yes':
                 self._saveData()
-            #self._data.clear()
-    
-    def _tick(self):
-        '''Updates the cv2 logic, reading and finding specified colour in webcame frame'''
-        ret, frame = self._cam.read()
-
-        hsvImage = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV) #Convert to hsv colour space
-
-        #Get the values from the sliders in tk window
-        hue, sat, val, ran, contourCutOff = self._tkwindow.hsvrc_values
-
-        mask = cv2.inRange(hsvImage, np.array([hue-ran, sat-ran, val-ran]), np.array([hue+ran, sat+ran, val+ran]))
-
-        contours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE) #Find the areas highlighted in mask
-
-        #Only highlight a contour if it is big enough, removes highlighting small areas not wanted
+            if messagebox.askquestion('Keep Data', 'Would you like to keep the current data in memory?') != 'yes':
+                self._data.clear()
+                
+    def _maintick(self, hue, sat, val, ran, contourCutOff):
+        '''Handles the core functionality required for the pendulum tracking'''
+        _, self._frame = self._cam.read()
+        hsvImage = cv2.cvtColor(self._frame, cv2.COLOR_BGR2HSV) #Convert to hsv colour space
+        self._mask = cv2.inRange(hsvImage, np.array([hue-ran, sat-ran, val-ran]), np.array([hue+ran, sat+ran, val+ran]))
+        contours, _ = cv2.findContours(self._mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE) #Find the areas highlighted in mask
         if len(contours) != 0:
             for countour in contours:
                 if cv2.contourArea(countour) > contourCutOff:
-                    x, y, w, h = cv2.boundingRect(countour)
-                    cv2.rectangle(frame, (x,y), (x+w, y+h), (0,0,255), 3)
-                    if self._dataAqu:
-                        self._data.append((x+w/2, y+h/2))
+                    return cv2.boundingRect(countour)
+        return None
+    
+    def _tick(self):
+        '''Update the cv2 windows - for use when script ran as __main__'''
+        hue, sat, val, ran, contourCutOff = self._tkwindow.hsvrc_values
+        res = self._maintick(hue, sat, val, ran, contourCutOff)
+        if res != None:
+            x, y, w, h = res
+            cv2.rectangle(self._frame, (x,y), (x+w, y+h), (0,0,255), 3)
+            if self._dataAqu:
+                self._data.append((x+w/2, y+h/2))
 
-        cv2.imshow('mask', mask)
-        cv2.imshow('frame', frame)
+        cv2.imshow('mask', self._mask)
+        cv2.imshow('frame', self._frame)
         #cv2.imshow('hsv', hsvImage)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):  #Q stops the mainloop
@@ -136,7 +142,20 @@ class Manager:
         #Clean up
         self._cam.release()    
         cv2.destroyAllWindows()
+    
+    @classmethod
+    def randomNumber(cls, hsvrc_values):
+        '''Returns a random number, using the pendulum as a seed. Reutrns a regular random number if pendulumn not '''
+        res = cls._maintick(*hsvrc_values)
+        if res == None:
+            return random.random()
+        x, y, w, h = res
+        seed = (x+y)/(w+h)
+        random.seed(seed)
+        return random.random()
 
 if __name__ == '__main__':
-    manager = Manager()
+    manager = Manager(True)
     manager.run()
+else:
+    manager = Manager(False)

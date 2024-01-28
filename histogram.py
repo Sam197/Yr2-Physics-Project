@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import random
+import pickle
 import customRando
 
 #data = np.random.randn(1000000)
