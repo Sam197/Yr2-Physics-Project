@@ -1,8 +1,10 @@
 import tkinter as tk
 from tkinter import messagebox, filedialog
+import random
 import pickle
 import matplotlib.pyplot as plt
 import numpy as np
+from collections import defaultdict
 
 def get_data():
 
@@ -11,7 +13,6 @@ def get_data():
     root.filename = filedialog.askopenfile(mode='r')
     try:
         with open(root.filename.name, 'rb') as ins:
-      
             data = pickle.load(ins)
         messagebox.showinfo('Loaded', 'Loaded Sucessfully')
     except:
@@ -20,13 +21,19 @@ def get_data():
     return data
 
 data = get_data()
-x, y = zip(*data)
-print(len(x))
-print(len(y))
-x = np.array(x)
-y = -np.array(y)
-plt.scatter(x,y)
-plt.xlabel('X-position (pixels)')
-plt.ylabel('Y-position (pixels)')
-plt.title('Position of Double Pendulum')
-plt.show()
+print(data)
+outdata = []
+for datum in data:
+    datum = str(datum)
+    try:
+        outdata.append(int(str(datum)[-5:]))
+    except ValueError:
+        continue
+
+print(outdata)
+ostr = ""
+for d in outdata:
+    random.seed(d)
+    ostr += str(round(random.random()))
+
+print(ostr)
