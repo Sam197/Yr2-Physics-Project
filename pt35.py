@@ -122,21 +122,27 @@ class Manager:
         hsvImage = cv2.cvtColor(self._frame, cv2.COLOR_BGR2HSV) #Convert to hsv colour space
         self._mask = cv2.inRange(hsvImage, np.array([hue-ran, sat-ran, val-ran]), np.array([hue+ran, sat+ran, val+ran]))
         contours, _ = cv2.findContours(self._mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE) #Find the areas highlighted in mask
+        boxes = []
         if len(contours) != 0:
             for countour in contours:
                 if cv2.contourArea(countour) > contourCutOff:
-                    return cv2.boundingRect(countour)
-        return None
+                    boxes.append(cv2.boundingRect(countour))
+                    if not self._UI:
+                        return boxes
+        if len(boxes) == 0:
+            return None
+        return boxes
     
     def _tick(self):
         '''Update the cv2 windows - for use when script ran as __main__'''
         hue, sat, val, ran, contourCutOff = self._tkwindow.hsvrc_values
-        res = self._maintick(hue, sat, val, ran, contourCutOff)
-        if res != None:
-            x, y, w, h = res
-            cv2.rectangle(self._frame, (x,y), (x+w, y+h), (0,0,255), 3)
-            if self._dataAqu:
-                self._data.append((x+w/2, y+h/2))
+        reses = self._maintick(hue, sat, val, ran, contourCutOff)
+        if reses != None:
+            for res in reses:
+                x, y, w, h = res
+                cv2.rectangle(self._frame, (x,y), (x+w, y+h), (0,0,255), 3)
+                if self._dataAqu:
+                    self._data.append((x+w/2, y+h/2))
 
         cv2.imshow('mask', self._mask)
         cv2.imshow('frame', self._frame)

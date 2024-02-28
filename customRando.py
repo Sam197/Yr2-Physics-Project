@@ -38,10 +38,12 @@ def random(seed = None, saveSeed = True) -> float:
     '''
     if seed == None:
         seed = getSeed()
-    rando = abs(100*log(seed, e)%1)
+    rando = abs((100*log(seed, e))%1)
     if saveSeed:
         setSeed(rando)
     return rando
+
+print(random(0.5))
 
 def randomInt(lowerBound, upperBound) -> int:
     '''
