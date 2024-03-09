@@ -1,2 +1,2 @@
 # Yr2-Physics-Project
-Yr 2 Phys
+Welcome to the GitHub repo for our Year 2 Physics Project 'How Random Can you Get?' 
